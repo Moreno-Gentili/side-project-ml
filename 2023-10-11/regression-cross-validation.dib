@@ -1,0 +1,62 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+### Cross validation con ML.NET
+
+#!csharp
+
+#r "nuget: Microsoft.ML, 2.0.1"
+#r "nuget: Microsoft.Data.Analysis, 0.20.1"
+using Microsoft.ML;
+using Microsoft.ML.Data;
+using Microsoft.Data.Analysis;
+
+#!markdown
+
+Carica i dati e crea il contesto
+
+#!csharp
+
+DataFrame data = DataFrame.LoadCsv("california_housing.csv");
+MLContext context = new();
+
+#!markdown
+
+Normalizza le feature
+
+#!csharp
+
+string[] featureNames = data.Columns.Select(c => c.Name).Take(data.Columns.Count - 1).ToArray();
+
+// Define data prep estimator
+IEstimator<ITransformer> dataPrepEstimator = context.Transforms
+                                                    .Concatenate("features", featureNames)
+                                                    .Append(context.Transforms.NormalizeMinMax("features"));
+
+// Create data prep transformer
+ITransformer dataPrepTransformer = dataPrepEstimator.Fit(data);
+
+// Transform data
+IDataView transformedData = dataPrepTransformer.Transform(data);
+
+transformedData.GetColumn<VBuffer<float>>("features").First().GetValues().ToArray()
+
+#!markdown
+
+Train del modello con cross validation
+
+https://developers.google.com/machine-learning/glossary#k-fold-cross-validation
+
+#!csharp
+
+// Define StochasticDualCoordinateAscent algorithm estimator
+IEstimator<ITransformer> sdcaEstimator = context.Regression.Trainers.Sdca(featureColumnName: "features", labelColumnName: "median_house_value");
+
+// Apply 5-fold cross validation
+var results = context.Regression.CrossValidate(transformedData, sdcaEstimator, numberOfFolds: 5, labelColumnName: "median_house_value");
+
+// Show models metrics
+results

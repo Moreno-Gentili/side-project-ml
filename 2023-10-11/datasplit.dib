@@ -1,0 +1,33 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+### Split del dataset per train e test con ML.NET
+
+#!csharp
+
+#r "nuget: Microsoft.ML, 2.0.1"
+#r "nuget: Microsoft.Data.Analysis, 0.20.1"
+using Microsoft.ML;
+using Microsoft.ML.Data;
+using Microsoft.Data.Analysis;
+
+#!markdown
+
+Carica i dati e crea il contesto
+
+#!csharp
+
+DataFrame data = DataFrame.LoadCsv("california_housing.csv");
+MLContext context = new();
+
+#!markdown
+
+#### Crea i dataset per train e test (80/20)
+
+#!csharp
+
+DataOperationsCatalog.TrainTestData trainTestSplit = context.Data.TrainTestSplit(data, testFraction: 0.2);
+trainTestSplit

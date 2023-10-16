@@ -1,0 +1,118 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+### Caricamento di un dataset CSV con il DataFrame di Microsoft.Data.Analysis
+
+#!csharp
+
+#r "nuget: Microsoft.Data.Analysis, 0.20.1"
+using Microsoft.Data.Analysis;
+
+#!markdown
+
+#### Carico il dataset
+Indicare i tipi di dato (double in questo caso) è opzionale
+
+#!csharp
+
+Type[] types = new Type[] { typeof(double), typeof(double), typeof(double), typeof(double), typeof(double), typeof(double), typeof(double), typeof(double), typeof(double) };
+DataFrame data = DataFrame.LoadCsv("california_housing.csv", dataTypes: types);
+data.Head(4)
+
+#!markdown
+
+#### Stampo i valori di una colonna
+
+#!csharp
+
+data["median_house_value"]
+
+#!markdown
+
+Stampo solo le prime due righe di una colonna
+
+#!csharp
+
+data["median_house_value"][0, 2]
+
+#!markdown
+
+#### Stampo alcune statistiche del dataset
+
+#!csharp
+
+data.Description()
+
+#!markdown
+
+Creo una nuova colonna calcolata
+
+#!csharp
+
+data["people_per_bedroom"] = data["population"] / data["total_bedrooms"];
+data.Description()
+
+#!markdown
+
+### Visualizzazione del dataset con Plotly
+Viene rappresentato il valore della casa in rapporto alla latitudine. Si vede che i valori cambiano in base alle latitudini (a Los Angeles e San Diego è più alto che in zone rurali della California).
+
+#!csharp
+
+#r "nuget: XPlot.Plotly"
+#r "nuget: XPlot.Plotly.Interactive"
+using XPlot.Plotly;
+
+#!csharp
+
+var chart1 = Chart.Plot(
+    new Scatter
+    {
+        x = data.Columns["latitude"],
+        y = data.Columns["median_house_value"],
+        mode = "markers"
+    }
+);
+var chart1_layout = new Layout.Layout{
+    title = "Value by latitude",
+    xaxis = new Xaxis
+        {
+            title = "Latitude"
+        },
+        yaxis = new Yaxis
+        {
+            title = "Median House value"
+        }
+    };
+chart1.WithLayout(chart1_layout);
+chart1
+
+#!markdown
+
+### Calcolo della correlation matrix, per trovare le feature più rilevanti
+Usando l'algoritmo Pearson Correlation Matrix fornito da MathNet.Numerics. Si vede che il prezzo della casa è correlato (0.69) allo stipendio del proprietario.
+
+#!csharp
+
+#r "nuget: MathNet.Numerics, 5.0.0"
+using MathNet.Numerics.Statistics;
+
+#!csharp
+
+double[,] matrix = Correlation.PearsonMatrix(data.Columns.Select(c => c.Cast<double>().ToArray()).ToArray()).ToArray();
+string[] labels = data.Columns.Select(c => c.Name.Replace("_", " ")).ToArray();
+
+var correlationMatrixHeatmap = Chart.Plot(
+    new Heatmap
+    {
+        x = labels,
+        y = labels,
+        z = matrix,
+        zmin = -1,
+        zmax = 1
+    }
+);
+correlationMatrixHeatmap
