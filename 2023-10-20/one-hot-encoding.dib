@@ -1,0 +1,118 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: Microsoft.ML, 2.0.1"
+#r "nuget: Microsoft.Data.Analysis, 0.20.1"
+#r "nuget: XPlot.Plotly"
+#r "nuget: XPlot.Plotly.Interactive"
+using Microsoft.ML;
+using Microsoft.ML.Data;
+using Microsoft.Data.Analysis;
+using XPlot.Plotly;
+
+#!markdown
+
+Carica i dati e crea il contesto
+
+#!csharp
+
+DataFrame data = DataFrame.LoadCsv("../california_housing.csv");
+MLContext context = new();
+
+#!markdown
+
+### Mostra la relazione tra latitudine e valore delle case
+In California, alcune latitudini come 34° e 38° hanno un paesaggio molto vario: dalle grandi città a zone desertiche. Per questo troviamo case di valore diversificato.
+
+#!csharp
+
+var chart1 = Chart.Plot(
+    new Scatter
+    {
+        x = data.Columns["latitude"],
+        y = data.Columns["median_house_value"],
+        mode = "markers"
+    }
+);
+var chart1_layout = new Layout.Layout{
+    xaxis = new Xaxis
+        {
+            title = "Latitude"
+        },
+        yaxis = new Yaxis
+        {
+            title = "Median house value"
+        }
+    };
+chart1.WithLayout(chart1_layout);
+chart1
+
+#!markdown
+
+![lat](https://images.mapsofworld.com/usa/states/california/california-lat-long-map.jpg)
+
+#!markdown
+
+## Discretizzazione
+I valori continui della latitudine non aiutano il modello ad apprendere. Meglio creare dei valori discreti, dei "bin" in modo che molte righe del dataset assumano lo stesso valore.
+
+#!csharp
+
+data["discretized_latitude"] = (data["latitude"] * 2).Round();
+data["discretized_longitude"] = (data["longitude"]* 2).Round().Abs();
+
+#!markdown
+
+### Feature cross
+Creiamo una nuova feature ottenuta incrociando latitudine e longitudine.
+
+#!csharp
+
+data["feature_cross"] = data["discretized_longitude"] * 100 + data["discretized_latitude"];
+data["feature_cross"].ValueCounts()
+
+#!markdown
+
+### One-hot encoding
+Ora che ho la mia feature cross, la converto in un vettore di 0 e 1. Il vettore avrà come lunghezza il numero di valori unici presenti nella mia feature cross. Ogni vettore conterrà solo un 1 e tutti gli altri saranno 0 (è un vettore sparso). Quell'1 rappresenta il bin, cioè l'incrocio di latitudine e longitudine in cui si trova la casa.
+
+#!csharp
+
+using static Microsoft.ML.Transforms.OneHotEncodingEstimator;
+string[] featureNames = new[] { 
+    // "longitude",
+    // "latitude",
+    "feature_cross_onehot",
+    "housing_median_age",
+    "total_rooms",
+    "total_bedrooms",
+    "population",
+    "households",
+    "median_income" };
+
+IDataView transformedData = 
+                context.Transforms.Categorical.OneHotEncoding("feature_cross_onehot", inputColumnName: "feature_cross", maximumNumberOfKeys: Convert.ToInt32(data["feature_cross"].ValueCounts().Rows.Count))
+        .Append(context.Transforms.Concatenate("features", featureNames))
+        .Append(context.Transforms.NormalizeMinMax("features"))
+        .Fit(data).Transform(data);
+
+transformedData.GetColumn<VBuffer<float>>("features").ElementAt(0).DenseValues()
+
+#!markdown
+
+### Training
+Addestro il modello e vedo che la precisione è migliorata (~0.69) rispetto all'aver passato latitudine e longitudine come feature distinte (~0.63).
+
+#!csharp
+
+// Define StochasticDualCoordinateAscent algorithm estimator
+IEstimator<ITransformer> sdcaEstimator = context.Regression.Trainers.Sdca(featureColumnName: "features", labelColumnName: "median_house_value");
+
+// Apply 5-fold cross validation
+var results = context.Regression.CrossValidate(transformedData, sdcaEstimator, numberOfFolds: 5, labelColumnName: "median_house_value");
+
+// Show models metrics
+results
