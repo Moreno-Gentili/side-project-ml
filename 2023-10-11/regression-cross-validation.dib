@@ -20,7 +20,7 @@ Carica i dati e crea il contesto
 
 #!csharp
 
-DataFrame data = DataFrame.LoadCsv("california_housing.csv");
+DataFrame data = DataFrame.LoadCsv("../california_housing.csv");
 MLContext context = new();
 
 #!markdown
@@ -53,7 +53,7 @@ https://developers.google.com/machine-learning/glossary#k-fold-cross-validation
 #!csharp
 
 // Define StochasticDualCoordinateAscent algorithm estimator
-IEstimator<ITransformer> sdcaEstimator = context.Regression.Trainers.Sdca(featureColumnName: "features", labelColumnName: "median_house_value");
+IEstimator<ITransformer> sdcaEstimator = context.Regression.Trainers.Sdca(featureColumnName: "features", labelColumnName: "median_house_value", l2Regularization: 0.00001f);
 
 // Apply 5-fold cross validation
 var results = context.Regression.CrossValidate(transformedData, sdcaEstimator, numberOfFolds: 5, labelColumnName: "median_house_value");
