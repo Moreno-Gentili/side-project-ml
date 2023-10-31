@@ -70,5 +70,7 @@ Se si sceglie un λ adeguato, i pesi delle feature non informative dovrebbero te
 
 ![imagaes/lambda.png](images/lambda.png)
 
-Ricorda che puoi sapere quanto una feature sia informativa usando la [matrice di correlazione](../2023-10-11/README.md#matrice-di-correlazione).
+Questo potrebbe essere un buon indicatore delle feature da rimuovere ma ricorda che, ancor prima di addestrare un modello, la [matrice di correlazione](../2023-10-11/README.md#matrice-di-correlazione) può dirci se e quanto siano correlate le feature alla label.
+
+Raramente, può capitare che una feature non informativa *sembri* avere una correlazione con la label. Questo può succedere per puro caso, soprattutto se il dataset contiene pochi esempi. Durante l'addestramento, il modello penserà che esiste una correlazione e perciò il peso _ω_ di quella feature crescerà come se fosse una feature informativa. Qui chiaramente sta a noi capire che quella feature non dovrebbe essere usata. Il cosiddetto lavoro di _feature engineering_ va fatto a mano, con vari esperimenti, ed è essenziale per ottenere modelli affidabili.
 
