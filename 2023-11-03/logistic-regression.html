@@ -8,7 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"
         integrity="sha512-6HrPqAvK+lZElIZ4mZ64fyxIBTsaX5zAFZg2V/2WT+iKPrFzTzvx6QAsLW2OaLwobhMYBog/+bvmIEEGXi0p1w=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js" integrity="sha512-Hn1w6YiiFw6p6S2lXv6yKeqTk0PLVzeCwWY9n32beuPjQ5HLcvz5l2QsP+KilEr1ws37rCTw3bZpvfvVIeTh0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"
+        integrity="sha512-Hn1w6YiiFw6p6S2lXv6yKeqTk0PLVzeCwWY9n32beuPjQ5HLcvz5l2QsP+KilEr1ws37rCTw3bZpvfvVIeTh0Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         * {
             font-family: monospace;
@@ -54,11 +57,22 @@
         }
 
         .model {
-            color: #006309
+            color: #006309;
+            display: inline-block;
+        }
+
+        .model span {
+            display: inline-block;
         }
 
         .logloss {
             color: red;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+
+        .logloss-test {
+            color: darkred;
         }
 
         .logloss>span {
@@ -75,16 +89,32 @@
             max-width: 800px;
             max-height: 400px;
         }
+
+        sup,
+        sub {
+            position: relative;
+            display: inline-block;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        sub {
+            top: .3em;
+        }
+
+        sup {
+            left: -0.5em;
+        }
     </style>
 </head>
 
 <body>
     <main>
         <div class="container">
-            <span class="model">y = <span id="param_w1"></span>x<sub>1</sub> + <span id="param_w2"></span>x<sub>2</sub> + <span id="param_b"></span></span>
+            <span class="model">y = σ(<span id="param_w1"></span>x<sub>1</sub> + <span
+                    id="param_w2"></span>x<sub>2</sub> + <span id="param_b"></span>)</span>
             <span class="logloss"><span>LogLoss (train): </span><span id="logloss"></span></span>
             <span class="logloss-test"><span>LogLoss (test): </span><span id="logloss-test"></span></span>
-                <canvas id="cost_history" width="40" height="40"></canvas>
         </div>
         <canvas id="chart"></canvas>
         <details open>
@@ -177,7 +207,7 @@
 
         function learn(rate, batch) {
             let w1Sum = 0;
-            let w2Sum = 0; 
+            let w2Sum = 0;
             let bSum = 0;
 
             // Feature scaling
@@ -235,11 +265,11 @@
                 learn(learningRate, batch);
                 render();
 
-                const converged = steps > 500;
+                const converged = steps >= 500;
 
                 if (converged) {
                     clearInterval(gradientDescentInterval);
-                    setTimeout(() => alert(`Gradient descent converged after ${steps} steps`), 500);
+                    setTimeout(() => alert(`Gradient descent stopped after ${steps} steps`), 500);
                 }
             }, 8);
         }
@@ -267,8 +297,7 @@
             return loss / (testData.set1.length + testData.set2.length);
         }
 
-        function calculateLoss(set, y)
-        {
+        function calculateLoss(set, y) {
             let sum = 0;
 
             for (let i = 0; i < set.length; i++) {
@@ -302,22 +331,8 @@
             document.getElementById('param_b').title = params.b;
             document.getElementById('logloss').innerText = logloss.toFixed(2);
             document.getElementById('logloss-test').innerText = testLogloss.toFixed(2);
-            
+
             chart.update();
-
-            const canvas = document.getElementById('cost_history');
-            const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = false;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - Math.trunc(costHistory[0]));
-
-            for (let i = 0; i < costHistory.length; i++) {
-                ctx.lineTo(i + 1, canvas.height - Math.trunc(costHistory[i]));
-            }
-
-            ctx.strokeStyle = 'red';
-            ctx.stroke();
         }
 
         function generateData(pointsPerX) {
@@ -348,15 +363,15 @@
                 const y1 = hypotesis(x1, x2);
                 if (y1 >= 0.5) {
                     errorData[`area${i}`] = {
-                                    drawTime: 'beforeDraw',
-                                    type: 'ellipse',
-                                    borderColor: 'transparent',
-                                    xMin: x1 - radius,
-                                    xMax: x1 + radius,
-                                    yMin: x2 - radius,
-                                    yMax: x2 + radius,
-                                    backgroundColor: 'rgba(99, 255, 132, 0.25)'
-                                };
+                        drawTime: 'beforeDraw',
+                        type: 'ellipse',
+                        borderColor: 'transparent',
+                        xMin: x1 - radius,
+                        xMax: x1 + radius,
+                        yMin: x2 - radius,
+                        yMax: x2 + radius,
+                        backgroundColor: 'rgba(99, 255, 132, 0.25)'
+                    };
                 }
             }
 
