@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistic regression</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"
+        integrity="sha512-6HrPqAvK+lZElIZ4mZ64fyxIBTsaX5zAFZg2V/2WT+iKPrFzTzvx6QAsLW2OaLwobhMYBog/+bvmIEEGXi0p1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js" integrity="sha512-Hn1w6YiiFw6p6S2lXv6yKeqTk0PLVzeCwWY9n32beuPjQ5HLcvz5l2QsP+KilEr1ws37rCTw3bZpvfvVIeTh0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        * {
+            font-family: monospace;
+        }
+
+        main {
+            max-width: 800px;
+            max-height: 400px;
+            margin: auto;
+        }
+
+        button {
+            padding: 6px 15px;
+            border-radius: 5px;
+            background-color: #008c0d;
+            border: 0;
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+        }
+
+        select,
+        input {
+            padding: 4px;
+        }
+
+        summary {
+            font-weight: 300;
+        }
+
+        details {
+            margin-left: 30px;
+            margin-top: 10px;
+        }
+
+        .container {
+            font-size: 16px;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            padding-left: 40px;
+            padding-right: 10px;
+        }
+
+        .model {
+            color: #006309
+        }
+
+        .logloss {
+            color: red;
+        }
+
+        .logloss>span {
+            vertical-align: top;
+        }
+
+        #cost_history {
+            height: 40px;
+            width: 40px;
+            margin-left: 20px;
+        }
+
+        #chart {
+            max-width: 800px;
+            max-height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="container">
+            <span class="model">y = <span id="param_w1"></span>x<sub>1</sub> + <span id="param_w2"></span>x<sub>2</sub> + <span id="param_b"></span></span>
+            <span class="logloss"><span>LogLoss (train): </span><span id="logloss"></span></span>
+            <span class="logloss-test"><span>LogLoss (test): </span><span id="logloss-test"></span></span>
+                <canvas id="cost_history" width="40" height="40"></canvas>
+        </div>
+        <canvas id="chart"></canvas>
+        <details open>
+            <summary>Gradient descent</summary>
+            <div>
+                Learning rate: <input id="learning_rate" name="learning_rate" type="number" value="0.2" step="0.01"
+                    min="0.01" max="4" size="8">
+                Batch size: <select id="batch_size" name="batch_size">
+                    <option value="100" selected>Full dataset (100%)</option>
+                    <option value="80">Mini-batch (80%)</option>
+                    <option value="50">Mini-batch (50%)</option>
+                    <option value="20">Mini-batch (20%)</option>
+                </select>
+                <button type="button" onclick="gradientDescent()">Learn</button>
+            </div>
+        </details>
+    </main>
+    <script>
+        var chart;
+        const params = { w1: Math.random(), w2: Math.random(), b: Math.random() };
+        var logloss = 0;
+        const max = { x: 200, y: 100 };
+        const ctx = document.getElementById('chart');
+        const data = generateData(5);
+        const testData = generateData(1);
+        const costHistory = [];
+        var batch = data;
+        var gradientDescentInterval;
+
+        init();
+        render();
+
+        function init() {
+            chart = new Chart(ctx, {
+                data: {
+                    datasets: [{
+                        type: 'bubble',
+                        backgroundColor: 'red',
+                        borderColor: 'transparent',
+                        data: data.set1
+                    }, {
+                        type: 'bubble',
+                        backgroundColor: 'green',
+                        borderColor: 'transparent',
+                        data: data.set2
+                    },
+                    {
+                        type: 'bubble',
+                        backgroundColor: 'transparent',
+                        borderColor: 'red',
+                        data: testData.set1
+                    }, {
+                        type: 'bubble',
+                        backgroundColor: 'transparent',
+                        borderColor: 'green',
+                        data: testData.set2
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        annotation: {
+                            animate: false,
+                            animation: false,
+                            annotations: {}
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: max.y,
+                            min: 0,
+                            ticks: {
+                                stepSize: 10
+                            }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            max: max.x,
+                            ticks: {
+                                stepSize: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function learn(rate, batch) {
+            let w1Sum = 0;
+            let w2Sum = 0; 
+            let bSum = 0;
+
+            // Feature scaling
+            // https://towardsdatascience.com/gradient-descent-the-learning-rate-and-the-importance-of-feature-scaling-6c0b416596e1#585f
+            // https://www.robinwieruch.de/improving-gradient-descent-javascript/
+            const x1scale = 1 / 1000;
+            const x2scale = 1 / 500;
+            const m = batch.set1.length + batch.set2.length;
+
+            // https://www.robinwieruch.de/logistic-regression-gradient-descent-classification-javascript/
+            for (let i = 0; i < batch.set1.length; i++) {
+                const x1 = batch.set1[i].x;
+                const x2 = batch.set1[i].y;
+                const y1 = hypotesis(x1, x2);
+                const y = 0;
+                const h = y1 - y;
+                bSum += y1 * 1;
+                w1Sum += h * x1 * x1scale;
+                w2Sum += h * x2 * x2scale;
+            }
+
+            for (let i = 0; i < batch.set2.length; i++) {
+                const x1 = batch.set2[i].x;
+                const x2 = batch.set2[i].y;
+                const y1 = hypotesis(x1, x2);
+                const y = 1;
+                const h = y1 - y;
+                bSum += h * 1;
+                w1Sum += h * x1 * x1scale;
+                w2Sum += h * x2 * x2scale;
+            }
+
+            bSum /= m;
+            w1Sum /= m;
+            w2Sum /= m;
+
+            params.b -= bSum * rate;
+            params.w1 -= w1Sum * rate;
+            params.w2 -= w2Sum * rate;
+        }
+
+        function gradientDescent() {
+            if (gradientDescentInterval) {
+                clearInterval(gradientDescentInterval);
+            }
+
+            const learningRate = parseFloat(document.getElementById('learning_rate').value);
+            const batchSize = parseInt(document.getElementById('batch_size').value);
+
+            let steps = 0;
+            gradientDescentInterval = setInterval(() => {
+                steps++;
+                const previousCost = logloss;
+                batch = getBatch(batchSize);
+                learn(learningRate, batch);
+                render();
+
+                const converged = steps > 500;
+
+                if (converged) {
+                    clearInterval(gradientDescentInterval);
+                    setTimeout(() => alert(`Gradient descent converged after ${steps} steps`), 500);
+                }
+            }, 8);
+        }
+
+        function hypotesis(x1, x2) {
+            const z = params.w1 * x1 + params.w2 * x2 + params.b;
+            return sigmoid(z) * 0.999; // clamp sigmoid to prevent infinity and nan
+        }
+
+        function sigmoid(z) {
+            return 1 / (1 + Math.exp(-z));
+        }
+
+        function calculateLogLoss() {
+            const loss1 = calculateLoss(batch.set1, 0);
+            const loss2 = calculateLoss(batch.set2, 1);
+            const loss = loss1 + loss2;
+            return loss / (batch.set1.length + batch.set2.length);
+        }
+
+        function calculateTestLogLoss() {
+            const loss1 = calculateLoss(testData.set1, 0);
+            const loss2 = calculateLoss(testData.set2, 1);
+            const loss = loss1 + loss2;
+            return loss / (testData.set1.length + testData.set2.length);
+        }
+
+        function calculateLoss(set, y)
+        {
+            let sum = 0;
+
+            for (let i = 0; i < set.length; i++) {
+                const y1 = hypotesis(set[i].x, set[i].y);
+                // -ylog(y') - (1 - y)log(1 - y')
+                // const loss = -y * Math.log(y1) - (1 - y) * Math.log(1 - y1);
+                // https://www.robinwieruch.de/logistic-regression-gradient-descent-classification-javascript/
+                const loss = y == 0 ? -Math.log(1 - y1) : -Math.log(y1);
+                sum += loss;
+            }
+
+            return sum;
+        }
+
+        function render() {
+            logloss = calculateLogLoss();
+            testLogloss = calculateTestLogLoss();
+            costHistory.push(logloss);
+            while (costHistory.length > 40) {
+                costHistory.shift();
+            }
+
+            const errorData = getErrorData();
+            chart.options.plugins.annotation.annotations = errorData;
+
+            document.getElementById('param_w1').innerText = params.w1.toFixed(2);
+            document.getElementById('param_w1').title = params.w1;
+            document.getElementById('param_w2').innerText = params.w2.toFixed(2);
+            document.getElementById('param_w2').title = params.w2;
+            document.getElementById('param_b').innerText = params.b.toFixed(2);
+            document.getElementById('param_b').title = params.b;
+            document.getElementById('logloss').innerText = logloss.toFixed(2);
+            document.getElementById('logloss-test').innerText = testLogloss.toFixed(2);
+            
+            chart.update();
+
+            const canvas = document.getElementById('cost_history');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - Math.trunc(costHistory[0]));
+
+            for (let i = 0; i < costHistory.length; i++) {
+                ctx.lineTo(i + 1, canvas.height - Math.trunc(costHistory[i]));
+            }
+
+            ctx.strokeStyle = 'red';
+            ctx.stroke();
+        }
+
+        function generateData(pointsPerX) {
+            const data = { set1: [], set2: [] };
+            const radius = 40;
+
+            for (let x = 15; x < max.x; x++) {
+                for (let i = 0; i < Math.min(pointsPerX, x / 10); i++) {
+                    const y = Math.pow(Math.log(x), 4) / 10;
+                    const variance = Math.random() - 0.5;
+                    const noise = Math.random() * 0.4 - 0.2;
+                    const prob = Math.min(1, x / 50) + (Math.random() * 0.2 - 0.1);
+                    const dataset = prob < 0.9 || variance > 0 ? data.set1 : data.set2;
+                    dataset.push({ x: x, y: y + (variance + noise) * 40 });
+                }
+            }
+
+            return data;
+        }
+
+        function getErrorData() {
+            const errorData = {};
+            const set = [...data.set1, ...data.set2, ...testData.set1, ...testData.set2];
+            const radius = 6;
+            for (let i = 0; i < set.length; i++) {
+                const x1 = set[i].x;
+                const x2 = set[i].y;
+                const y1 = hypotesis(x1, x2);
+                if (y1 >= 0.5) {
+                    errorData[`area${i}`] = {
+                                    drawTime: 'beforeDraw',
+                                    type: 'ellipse',
+                                    borderColor: 'transparent',
+                                    xMin: x1 - radius,
+                                    xMax: x1 + radius,
+                                    yMin: x2 - radius,
+                                    yMax: x2 + radius,
+                                    backgroundColor: 'rgba(99, 255, 132, 0.25)'
+                                };
+                }
+            }
+
+            return errorData;
+        }
+
+        function getBatch(batchSize) {
+            if (batchSize >= 100) {
+                return data;
+            }
+
+            batchSize = batchSize * (data.set1.length + data.set2.length) / 100;
+
+            const batch = { set1: shuffle(data.set1).slice(0, batchSize / 2), set2: shuffle(data.set2).slice(0, batchSize / 2) };
+            return batch;
+        }
+
+        function shuffle(array) {
+            array = array.map(x => x);
+            let currentIndex = array.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex > 0) {
+
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+
+            return array;
+        }
+
+    </script>
+</body>
+
+</html>
