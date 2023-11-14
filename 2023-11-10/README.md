@@ -32,8 +32,11 @@ Alzando la threshold, aumenteranno di certo i falsi negativi (email di spam che 
 
 Dato che possiamo spostare il threshold a piacimento, potrebbero esistere dei casi in cui ha senso porlo su 0.99 anziché 0.8. Ad esempio, quando stiamo realizzando un modello per la previsione di **eventi rari o molto rari**.
 
-In questa situazione è importante scegliere le metriche giuste per determinare se il nostro modello è abbastanza affidabile.
+In questa situazione è importante saper scegliere le metriche giuste per determinare se il nostro modello è abbastanza affidabile o no.
 
 ### Precision
+La precision non sempre è una buona metrica. Si calcola così:
 
 
+
+## 
