@@ -1,6 +1,6 @@
-# Esercizi su classificazione multiclasse
+# Riassunto della call
 
-Abbiamo usato ML.NET e Elixir Axon
+Abbiamo fatto degli esercizi sulla classificazione multiclasse usando ML.NET (C#) e Axon (Elixir).
 
 ## Modelli ONNX
 
