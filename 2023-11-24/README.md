@@ -21,9 +21,9 @@ https://huggingface.co/models?pipeline_tag=text-classification&library=onnx&sort
 
 ## Classificazione multiclasse
 Per il nostro esercizio, abbiamo scelto il modello [Finance Classification](https://huggingface.co/nickmuchi/sec-bert-finetuned-finance-classification) in grado di prendere in esame una frase a tema finanziario e determinarne il _sentiment_, cioè classificarla come:
- - **Bearish** (cioè con prospettiva tendente al ribasso);
+ - **Bearish** (prospettiva tendente al ribasso);
  - **Neutra**;
- - **Bullish** (cioè con prospettiva tendente al rialzo).
+ - **Bullish** (prospettiva tendente al rialzo).
 
  ![https://mentormecareers.com/wp-content/uploads/2023/02/Bullish-Vs-Bearish-1.png](https://mentormecareers.com/wp-content/uploads/2023/02/Bullish-Vs-Bearish-1.png)
 
