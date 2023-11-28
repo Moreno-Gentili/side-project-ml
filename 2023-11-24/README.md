@@ -20,14 +20,14 @@ Su [huggingface.co](huggingface.co), un sito di collaborazione e condivisione di
 https://huggingface.co/models?pipeline_tag=text-classification&library=onnx&sort=trending
 
 ## Classificazione multiclasse
-Per il nostro esercizio, abbiamo scelto il modello in grado di prendere in esame una frase relativa alla finanza e rilevarne il _sentiment_, cioè classificarla come:
- - Bearish (tendente al ribasso);
- - Neutra;
- - Bullish (tendente al rialzo).
-
-> Ad esempio, la frase `Burberry reports slow sales growth as Covid impact persists` viene classificata come `Bearish`.
+Per il nostro esercizio, abbiamo scelto il modello [Finance Classification](https://huggingface.co/nickmuchi/sec-bert-finetuned-finance-classification) in grado di prendere in esame una frase a tema finanziario e determinarne il _sentiment_, cioè classificarla come:
+ - **Bearish** (cioè con prospettiva tendente al ribasso);
+ - **Neutra**;
+ - **Bullish** (cioè con prospettiva tendente al rialzo).
 
  ![https://mentormecareers.com/wp-content/uploads/2023/02/Bullish-Vs-Bearish-1.png](https://mentormecareers.com/wp-content/uploads/2023/02/Bullish-Vs-Bearish-1.png)
+
+ > Ad esempio, la frase `Burberry reports slow sales growth as Covid impact persists` viene classificata come `Bearish`.
  
  Trattandosi di 3 possibili classi, questo è quindi un modello di **classificazione multiclasse**.
 
