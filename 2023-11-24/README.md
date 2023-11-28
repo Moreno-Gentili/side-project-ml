@@ -4,7 +4,7 @@ Abbiamo fatto degli esercizi sulla classificazione multiclasse usando ML.NET (C#
 
 ## Modelli ONNX
 
-A prescindere dalle tecnologie usate per addestrare il modello, lo possiamo poi esportare nel formato open-source ONNX (Open Neural Network Exchange). Questo è un formato che rende il modello interoperable, cioè caricabile anche da librerie da quelle che erano state usate per crearlo.
+A prescindere dalle tecnologie usate per addestrare il modello, lo possiamo poi esportare nel formato open-source ONNX (Open Neural Network Exchange). Questo è un formato che rende il modello interoperable, cioè caricabile anche da librerie diverse da quelle che erano state usate per crearlo (es. creato con Tensorflow e poi usato da ML.NET).
 
 > C'è un esempio completo nella documentazione Microsoft, all'indirizzo [https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-onnx-model-dotnet](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-onnx-model-dotnet)
 
