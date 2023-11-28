@@ -79,13 +79,13 @@ La stringa deve per prima cosa essere *tokenizzata*, cioè convertita in un vett
 
 ![https://miro.medium.com/v2/resize:fit:1400/1*f8NBZIutC7PuGo21rsVVkw.png](https://miro.medium.com/v2/resize:fit:1400/1*f8NBZIutC7PuGo21rsVVkw.png)
 
-In realtà, non sempre c'è una corrispondenza 1:1 tra parola e numero. Il tokenizer può decidere di spezzare una parola in due o più frammenti oppure di aggiungere dei token speciali di separazione.
+In realtà, non sempre c'è una corrispondenza 1:1 tra parola e ID. Il tokenizer può decidere di spezzare una parola in due o più frammenti oppure di aggiungere dei token speciali di separazione.
 
 Nel caso illustrato qui in alto, la parola _rumination_ è stata spezzata in due parti: _rum_ e _ination_. Ecco un altro esempio in cui sono stati ottenuti due _wordpiece_ da una singola parola.
 
 ![https://vamvas.ch/assets/bert-for-ner/tokenizer.png](https://vamvas.ch/assets/bert-for-ner/tokenizer.png)
 
-Il tokenizer di BERT, oltre al vettore di ID, produce anche due altri vettori chiamati _Attention mask_ e _Token type IDs_, il cui significato è [spiegato su Huggingface](https://huggingface.co/transformers/v3.2.0/glossary.html#attention-mask).
+> Il tokenizer di BERT, oltre al vettore di ID, produce anche due altri vettori chiamati _Attention mask_ e _Token type IDs_, il cui significato è [spiegato su Huggingface](https://huggingface.co/transformers/v3.2.0/glossary.html#attention-mask).
 
 ![https://heekangpark.github.io/assets/img/nlp/huggingface-bert-tokenizer.png](https://heekangpark.github.io/assets/img/nlp/huggingface-bert-tokenizer.png)
 
