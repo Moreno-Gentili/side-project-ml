@@ -8,9 +8,9 @@ A prescindere dal linguaggio e dalle librerie con cui un modello viene creato e 
 
 > C'è un esempio completo nella documentazione Microsoft, all'indirizzo [https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-onnx-model-dotnet](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-onnx-model-dotnet)
 
-Caricare il modello ONNX è solo il primo passo: dobbiamo anche capire che tipo di input si aspetta di ricevere. Per questo possiamo usare il sito [https://netron.app/](https://netron.app/) (anche scaricabile come app) che ci mostrerà l'elenco di input e output, oltre che un diagramma della struttura del modello.
+Caricare il modello ONNX è solo il primo passo: dobbiamo anche capire che tipo di input si aspetta di ricevere. Per questo possiamo usare il sito [Netron](https://netron.app/) (anche scaricabile come app) che ci mostrerà l'elenco di input e output, oltre che un diagramma della struttura del modello.
 
-![https://connectwww.com/wp-content/uploads/2021/11/Netron.jpg](https://connectwww.com/wp-content/uploads/2021/11/Netron.jpg)
+![https://cdn.linuxfordevices.com/wp-content/uploads/2023/08/Netron-in-action.png](https://cdn.linuxfordevices.com/wp-content/uploads/2023/08/Netron-in-action.png)
 
 
 Il formato ONNX è adatto sia per i modelli di deep learning che per quelli di machine learning tradizionali, come ad esempio regressione lineare o logistica, e classificazione.
